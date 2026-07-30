@@ -34,7 +34,7 @@ type AppState = {
   reminderDays: number;
 };
 
-const STORAGE_KEY = 'monthly-bills-data-v2';
+const STORAGE_KEY = 'monthly-bills-data-v3';
 const NOTIFIED_KEY = 'monthly-bills-last-notified';
 
 const defaultBills: Bill[] = [];
@@ -85,14 +85,6 @@ function migrateBill(bill: StoredBill): Bill {
   const { dueDay, ...billWithoutDueDay } = bill;
   const dueDate = typeof bill.dueDate === 'string' && bill.dueDate ? bill.dueDate : getNextDateForDay(dueDay ?? 1);
   const recurring = typeof bill.recurring === 'boolean' ? bill.recurring : false;
-
-  if (bill.name === 'Rent') {
-    return { ...billWithoutDueDay, name: 'Rocket Mortgage', amount: 3415, dueDate: getNextDateForDay(1), recurring, note: 'Monthly mortgage payment' };
-  }
-
-  if (bill.name === 'Internet' || bill.name === 'Phone') {
-    return { ...billWithoutDueDay, name: 'Internet & Phone', amount: 115.48, dueDate: getNextDateForDay(20), recurring, autopay: true, note: 'Combined service bill' };
-  }
 
   return { ...billWithoutDueDay, dueDate, recurring };
 }
@@ -154,6 +146,21 @@ function canNotify() {
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+}
+
+function normalizeUrl(url: string) {
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+
+  try {
+    return new URL(withProtocol).href;
+  } catch {
+    return trimmed;
+  }
 }
 
 function parseDateInput(value: string) {
@@ -405,6 +412,26 @@ export default function App() {
     );
   }
 
+  function openBillUrl(bill: Bill) {
+    const url = normalizeUrl(bill.url);
+    if (!url) {
+      return;
+    }
+
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  async function copyToClipboard(value: string) {
+    if (!value || !navigator.clipboard) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+    }
+  }
+
   async function requestNotifications() {
     if (!isNotificationSupported()) {
       return;
@@ -527,9 +554,21 @@ export default function App() {
                 </div>
                 {(bill.url || bill.username || bill.password) && (
                   <div className="bill-meta">
-                    {bill.url ? <span><a href={bill.url} target="_blank" rel="noreferrer">Open link</a></span> : null}
-                    {bill.username ? <span>User: {bill.username}</span> : null}
-                    {bill.password ? <span>Pass: {bill.password}</span> : null}
+                    {bill.url ? (
+                      <span><button type="button" className="inline-link-button" onClick={() => openBillUrl(bill)}>Open page</button></span>
+                    ) : null}
+                    {bill.username ? (
+                      <span className="credential-chip">
+                        User: {bill.username}
+                        <button type="button" className="copy-button" onClick={() => copyToClipboard(bill.username)}>Copy</button>
+                      </span>
+                    ) : null}
+                    {bill.password ? (
+                      <span className="credential-chip">
+                        Pass: {bill.password}
+                        <button type="button" className="copy-button" onClick={() => copyToClipboard(bill.password)}>Copy</button>
+                      </span>
+                    ) : null}
                   </div>
                 )}
               </div>
@@ -631,7 +670,7 @@ export default function App() {
               </label>
               <label>
                 Password
-                <input type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} placeholder="password" />
+                <input value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} placeholder="password" />
               </label>
             </div>
 
