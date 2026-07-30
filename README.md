@@ -2,6 +2,9 @@
 
 <img width="1093" height="557" alt="image" src="https://github.com/user-attachments/assets/0f3c82d8-6bc2-4d5c-b275-41c08a0a0c24" />
 
+<img width="760" height="772" alt="image" src="https://github.com/user-attachments/assets/92643a79-14c2-4fe1-bbaf-b989df7050d5" />
+
+
 This is a local React + TypeScript app for tracking recurring monthly bills.
 
 ## Features
