@@ -68,19 +68,6 @@ function getNextDateForDay(dueDay: number) {
   return toDateInputValue(date);
 }
 
-function getNextMonthDate(dueDate: string) {
-  const date = parseDateInput(dueDate);
-  if (!date) {
-    return dueDate;
-  }
-
-  const targetMonth = date.getMonth() + 1;
-  const nextMonthDays = new Date(date.getFullYear(), targetMonth + 1, 0).getDate();
-  const nextDate = new Date(date.getFullYear(), targetMonth, Math.min(date.getDate(), nextMonthDays));
-
-  return toDateInputValue(nextDate);
-}
-
 function migrateBill(bill: StoredBill): Bill {
   const { dueDay, ...billWithoutDueDay } = bill;
   const dueDate = typeof bill.dueDate === 'string' && bill.dueDate ? bill.dueDate : getNextDateForDay(dueDay ?? 1);
@@ -401,10 +388,6 @@ export default function App() {
       currentBills.map((bill) => {
         if (bill.id !== id) {
           return bill;
-        }
-
-        if (bill.status === 'unpaid' && bill.recurring) {
-          return { ...bill, dueDate: getNextMonthDate(bill.dueDate), status: 'unpaid' };
         }
 
         return { ...bill, status: bill.status === 'paid' ? 'unpaid' : 'paid' };
