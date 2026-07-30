@@ -9,7 +9,6 @@ This is a local React + TypeScript app for tracking recurring monthly bills.
 - See monthly totals and upcoming due items
 - Set a monthly budget target and track variance
 - Enable due-date reminders in supported browsers
-- Export or import a JSON backup of your data
 - Persist data in the browser with `localStorage`
 
 ## Run
@@ -17,3 +16,7 @@ This is a local React + TypeScript app for tracking recurring monthly bills.
 1. Install dependencies with `npm install`.
 2. Start the dev server with `npm run dev`.
 3. Build for production with `npm run build`.
+
+This project is open source and available under the MIT License.
+
+**Author: Roberto Raimondo -** © 2026 All Rights Reserved.

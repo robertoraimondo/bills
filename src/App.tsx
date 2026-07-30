@@ -34,12 +34,6 @@ type AppState = {
   reminderDays: number;
 };
 
-type BillExport = {
-  version: 1;
-  exportedAt: string;
-  state: AppState;
-};
-
 const STORAGE_KEY = 'monthly-bills-data-v2';
 const NOTIFIED_KEY = 'monthly-bills-last-notified';
 
@@ -110,56 +104,6 @@ function isNotificationSupported() {
 
 function canNotify() {
   return isNotificationSupported() && Notification.permission === 'granted';
-}
-
-function exportStateToJson(state: AppState) {
-  const payload: BillExport = {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    state,
-  };
-
-  return JSON.stringify(payload, null, 2);
-}
-
-function downloadTextFile(filename: string, content: string) {
-  const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
-
-function parseImportedState(raw: string): AppState | null {
-  try {
-    const parsed = JSON.parse(raw) as Partial<BillExport> | Partial<AppState> | Bill[];
-
-    if (Array.isArray(parsed)) {
-      return { ...defaultState(), bills: parsed };
-    }
-
-    if (parsed && typeof parsed === 'object' && 'state' in parsed && parsed.state) {
-      const exported = parsed.state as Partial<AppState>;
-
-      return {
-        bills: Array.isArray(exported.bills) ? exported.bills : defaultBills,
-        budgetTarget: typeof exported.budgetTarget === 'number' ? exported.budgetTarget : defaultState().budgetTarget,
-        reminderDays: typeof exported.reminderDays === 'number' ? exported.reminderDays : defaultState().reminderDays,
-      };
-    }
-
-    const direct = parsed as Partial<AppState>;
-
-    return {
-      bills: Array.isArray(direct.bills) ? direct.bills : defaultBills,
-      budgetTarget: typeof direct.budgetTarget === 'number' ? direct.budgetTarget : defaultState().budgetTarget,
-      reminderDays: typeof direct.reminderDays === 'number' ? direct.reminderDays : defaultState().reminderDays,
-    }
-  } catch {
-    return null;
-  }
 }
 
 function formatCurrency(amount: number) {
@@ -359,7 +303,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="import-export-row">
+          <div className="action-row">
             <button type="button" className="primary" onClick={openNewBillForm}>Add bill</button>
             <button type="button" className="ghost" onClick={requestNotifications}>
               {isNotificationSupported() && Notification.permission === 'granted' ? 'Notifications enabled' : 'Enable reminders'}
